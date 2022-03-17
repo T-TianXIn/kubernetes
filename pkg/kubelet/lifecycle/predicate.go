@@ -276,13 +276,17 @@ func GeneralPredicates(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) ([]Pr
 	}
 
 	var reasons []PredicateFailureReason
-	for _, r := range noderesources.Fits(pod, nodeInfo, feature.DefaultFeatureGate.Enabled(features.PodOverhead)) {
-		reasons = append(reasons, &InsufficientResourceError{
-			ResourceName: r.ResourceName,
-			Requested:    r.Requested,
-			Used:         r.Used,
-			Capacity:     r.Capacity,
-		})
+
+	// zhangyichen03: skip resource check of batch job
+	if pod.Spec.SchedulerName != "batch-scheduler" {
+		for _, r := range noderesources.Fits(pod, nodeInfo, feature.DefaultFeatureGate.Enabled(features.PodOverhead)) {
+			reasons = append(reasons, &InsufficientResourceError{
+				ResourceName: r.ResourceName,
+				Requested:    r.Requested,
+				Used:         r.Used,
+				Capacity:     r.Capacity,
+			})
+		}
 	}
 
 	// Ignore parsing errors for backwards compatibility.
